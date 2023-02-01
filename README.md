@@ -13,5 +13,5 @@ Eg:
 1. Create a new nginx web server, that proxies to your pigallery2 server. Sample nginx.conf file [here](sampleconfig/nginx.conf). It proxies all requests except the location /foto/.
 2. Deploy the nginx instance in docker or standalone, depending on your setup.
 3. Download foto.zip from the release section in github on this page, unzip it into <nginx-root-dir>/foto.
-4. Edit foto/assets/foto_settings.json and set the url, user and password for your pigallery2 instance. Sample [here](sampleconfig/foto_settings.json).
+4. Edit foto/assets/foto_settings.json and set the user and password for your pigallery2 instance. Sample [here](sampleconfig/foto_settings.json).
 5. Start nginx and point to http://nginx-host:nginx:port/foto/
