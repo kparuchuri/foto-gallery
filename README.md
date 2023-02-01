@@ -5,6 +5,10 @@ This is just for testing purposes at this point, and please leave any feedback u
 
 pigallery2 server does not work well with CORS, hence you need to create a new nginx web server in the same domain as your running pigallery2 server.
 
+Eg:
+- If my pigallery2 is running at http://myhomeserver.local:8045/ then my Foto server will run at http://myhomeserver.local:8089/foto/
+- CORS will work if both servers run on the same domain name, but any port number is fine.
+
 ## Instructions
 1. Create a new nginx web server, that proxies to your pigallery2 server. Sample nginx.conf file here
 2. Deploy the nginx instance in docker or standalone, depending on your setup.
