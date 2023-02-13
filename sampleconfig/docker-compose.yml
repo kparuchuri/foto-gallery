@@ -1,0 +1,15 @@
+version: "2.1"
+services:
+  heimdall:
+    image: varieum/foto-gallery:latest
+    container_name: foto-gallery
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - PIGALLERY2_BASEURL_PROP=http://192.168.1.78:8079   //CHANGE this to your pigallery2 host and port. Must follow the http url scheme
+      - PIGALLERY2_LOGIN_PROP=admin   //Optional. Specify only if you use pigallery2 authentication. Remove this line if you dont.
+      - PIGALLERY2_PASSWORD_PROP=admin //Optional. Specify only if you use pigallery2 authentication. Remove this line if you dont.
+    ports:
+      - 8099:80   //Map port 80 of container to any post on your host
+    restart: unless-stopped
