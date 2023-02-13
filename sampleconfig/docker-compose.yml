@@ -1,6 +1,6 @@
 version: "2.1"
 services:
-  heimdall:
+  foto-gallery:
     image: varieum/foto-gallery:latest
     container_name: foto-gallery
     environment:
