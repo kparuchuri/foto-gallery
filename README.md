@@ -6,7 +6,9 @@ pigallery2 server does not work well with CORS, hence you need to create a new n
 
 To simplify all this, I have a docker image available that takes 3 properties as environment variables - PiGallery2 URL, username, password - and deploys everything automatically in a container.
 
-Try it send me feedback.
+Try it and please send me feedback.
+
+https://user-images.githubusercontent.com/68288615/218384061-7f8e865d-8d80-4763-8a65-5aa039444c53.mp4
 
 ## Instructions
 1. Create a docker instance and run it!
