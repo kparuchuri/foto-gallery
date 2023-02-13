@@ -11,5 +11,5 @@ services:
       - PIGALLERY2_LOGIN_PROP=admin   //Optional. Specify only if you use pigallery2 authentication. Remove this line if you dont.
       - PIGALLERY2_PASSWORD_PROP=admin //Optional. Specify only if you use pigallery2 authentication. Remove this line if you dont.
     ports:
-      - 8099:80   //Map port 80 of container to any post on your host
+      - 8099:80   //Map port 80 of container to any port on your host
     restart: unless-stopped
