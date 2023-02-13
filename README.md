@@ -10,6 +10,6 @@ Try it send me feedback.
 
 ## Instructions
 1. Create a docker instance and run it!
-2. Sample Docker compose file is [here](resources/docker-compose.yml), its self-explanatory - takes 3 properties as environment variables.
+2. Sample Docker compose file is [here](sampleconfig/docker-compose.yml), its self-explanatory - takes 3 properties as environment variables.
 3. Only pigallery2 URL is mandatory, username/password are optional if you are running pigallery2 without auth.
 4. Start the docker instance and point to http://host:post/foto/  -  /foto/ is mandatory in the URL and hardcoded (for now).
