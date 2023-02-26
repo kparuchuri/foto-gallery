@@ -45,10 +45,8 @@ class GalleryBloc extends BaseBloc {
     });
   }
 
-  void getPhotoList(StreamSink<ApiResponse<List<Photo>>> sink,
+  Future<void> getPhotoList(StreamSink<ApiResponse<List<Photo>>> sink,
       [bool checkDB = false]) async {
-    sink.add(ApiResponse.loading());
-
     try {
       final Response<List<Photo>> response =
           await _repo.getPhotosList(galleryFolderPath, pageNumber);
@@ -68,11 +66,18 @@ class GalleryBloc extends BaseBloc {
   }
 
   void getInitialPhotosList() async {
-    getPhotoList(photosListSink, true);
+    photosListSink.add(ApiResponse.loading());
+    await getPhotoList(photosListSink, true);
+  }
+
+  void refreshPhotosList() async {
+    photosListSink.add(ApiResponse.refreshing());
+    await getPhotoList(photosListSink, true);
   }
 
   void requestNextPage() async {
-    getPhotoList(requestNextPageSink);
+    requestNextPageSink.add(ApiResponse.loading());
+    await getPhotoList(requestNextPageSink);
   }
 
   @override

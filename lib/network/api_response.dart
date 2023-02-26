@@ -6,7 +6,10 @@ class ApiResponse<T> {
 
   ApiResponse.loading() : status = Status.loading;
 
-  ApiResponse.completed(this.data, [this.statusCode]) : status = Status.completed;
+  ApiResponse.refreshing() : status = Status.refreshing;
+
+  ApiResponse.completed(this.data, [this.statusCode])
+      : status = Status.completed;
 
   ApiResponse.error(this.message) : status = Status.error;
 
@@ -16,4 +19,4 @@ class ApiResponse<T> {
   }
 }
 
-enum Status { loading, completed, error }
+enum Status { loading, refreshing, completed, error }

@@ -64,7 +64,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
           return Center(
             child: showLoader(context),
           );
-        } else if (snapshot.data?.status == Status.completed) {
+        } else if (snapshot.data?.status == Status.completed ||
+            snapshot.data?.status == Status.refreshing) {
           return photosGridView();
         } else if (snapshot.data?.status == Status.error) {
           return Error(
@@ -86,8 +87,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
           ))
         : RefreshIndicator(
+            //  displacement: 40,
+            edgeOffset: 20,
             onRefresh: () async {
-              _bloc.getInitialPhotosList();
+              return _bloc.refreshPhotosList();
             },
             child: GridView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
