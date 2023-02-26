@@ -1,0 +1,55 @@
+name: foto_gallery
+description: A photo gallery project for PiGallery2.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=2.18.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  http: ^0.13.5
+  cached_network_image: ^3.2.2
+  path_provider: ^2.0.11
+  permission_handler: ^10.2.0
+  video_player: ^2.5.1
+  chewie: ^1.3.6
+  flutter_staggered_grid_view: ^0.6.2
+  dio: ^4.0.6
+  carousel_slider: ^4.2.1
+  swipeable_page_route: ^0.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  build_runner: ^2.3.2
+  flutter_launcher_icons: "^0.11.0"
+  dart_code_metrics: ^5.5.0
+  
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/placeholder.png
+    - assets/images/placeholder_video.png
+    - assets/images/placeholder_folder.png
+    - assets/images/error.png
+    - foto_settings.json
+    - foto_settings_dev.json
+    - foto_settings_stg.json
+  fonts:
+    - family: Bellania
+      fonts:
+        - asset: assets/fonts/bellania.ttf
+
+flutter_icons:
+  web:
+    generate: true
+    image_path: "assets/icons/foto-icon.png"
+    background_color: "#000000"
+    theme_color: "#111111"
