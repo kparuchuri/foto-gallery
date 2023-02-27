@@ -1,3 +1,6 @@
+## Edit - Feb 26, 2023
+Committed the source code to this repository. You can use VSC to open this as a flutter project. At this time only flutter 'web' is enabled and working.
+
 # foto-gallery
 
 This is a flutter based web interface that connects to an existing pigallery2 server to show folders/photos/videos in a mobile friendly format.
