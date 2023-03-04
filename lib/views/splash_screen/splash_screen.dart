@@ -59,6 +59,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void initializeApp() {
-    Navigator.pushReplacementNamed(context, GalleryScreen.routeName);
+    Navigator.pushReplacementNamed(
+      context,
+      GalleryScreen.routeName,
+      arguments: {
+        'path': '',
+        'isSearchScreen': false,
+        'searchString': '',
+        'searchType': ''
+      },
+    );
   }
 }

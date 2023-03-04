@@ -6,6 +6,7 @@ import 'package:foto_gallery/models/photos_list_response.dart';
 import 'package:foto_gallery/network/api_response.dart';
 import 'package:foto_gallery/utils/app_constant.dart';
 import 'package:foto_gallery/utils/utility.dart';
+import 'package:foto_gallery/views/gallery_screen/photo_searchdelegate.dart';
 import 'package:foto_gallery/views/gallery_screen/widgets/gallery_image_box.dart';
 import 'package:foto_gallery/views/photo_preview_screen/photo_preview_screen.dart';
 import 'package:foto_gallery/views/photo_preview_screen/video_screen.dart';
@@ -15,20 +16,28 @@ import 'package:foto_gallery/widgets/error.dart';
 class GalleryScreen extends StatefulWidget {
   static const String routeName = 'gallery-screen';
   String path;
-  GalleryScreen({super.key, this.path = ''});
+  bool isSearchScreen;
+  String searchStr, searchType;
+  GalleryScreen(
+      {super.key,
+      this.path = '',
+      this.isSearchScreen = false,
+      this.searchStr = '',
+      this.searchType = ''});
 
   @override
   State<GalleryScreen> createState() => _GalleryScreenState();
 }
 
 class _GalleryScreenState extends State<GalleryScreen> {
-  GalleryBloc _bloc = GalleryBloc('/');
+  late GalleryBloc _bloc;
   Map hover = {};
   double screenWidth = 0;
   @override
   void initState() {
     super.initState();
-    _bloc = GalleryBloc(widget.path);
+    _bloc = GalleryBloc(widget.path, widget.isSearchScreen, widget.searchStr,
+        widget.searchType);
     _bloc.requestNextPageStream.listen((event) {
       if (event.status == Status.loading) {
       } else if (event.status == Status.completed) {
@@ -218,25 +227,71 @@ class _GalleryScreenState extends State<GalleryScreen> {
               }
             }
           },
-          child: widget.path == ''
-              ? const Text(
-                  'Foto',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Bellania',
-                    color: Colors.white,
-                    fontSize: 18.0,
-                  ),
-                )
-              : Text(
-                  cleanupString(widget.path),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16.0,
-                  ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Expanded(
+                child: Center(
+                  child: widget.isSearchScreen
+                      ? Text(
+                          widget.searchStr,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.0,
+                          ),
+                        )
+                      : widget.path == ''
+                          ? const Text(
+                              'Foto',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontFamily: 'Bellania',
+                                color: Colors.white,
+                                fontSize: 18.0,
+                              ),
+                            )
+                          : Text(
+                              cleanupString(widget.path),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.0,
+                              ),
+                            ),
                 ),
+              ),
+              if (!widget.isSearchScreen && widget.path == '')
+                IconButton(
+                  icon: const Icon(Icons.search_rounded),
+/*                   onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      PhotoSearch.routeName,
+                      arguments: _bloc,
+                    );
+                  }, */
+                  //        onPressed: () => _searchDialogBuilder(context),
+                  onPressed: () async {
+                    await showSearch<Map<String, String>>(
+                      context: context,
+                      query: null,
+                      delegate: PhotoSearchDelegate(
+                        parentBloc: _bloc,
+                      ),
+                    );
+                  },
+                ),
+            ],
+          ),
         ));
+  }
+
+  Future<List<Map<String, String>>> getSuggestions(String query) async {
+    // await Future<void>.delayed(const Duration(seconds: 1));
+    List<Map<String, String>> photos = await _bloc.autocompletePhotos(query);
+    debugLog('got photos from search $photos');
+    return photos;
   }
 
   String cleanupString(String path) {
@@ -292,7 +347,12 @@ class _FolderCardState extends State<FolderCard> {
           Navigator.pushNamed(
             context,
             GalleryScreen.routeName,
-            arguments: widget.photo.path,
+            arguments: {
+              'path': widget.photo.path,
+              'isSearchScreen': false,
+              'searchString': '',
+              'searchType': ''
+            },
           );
         },
         child: GridTile(

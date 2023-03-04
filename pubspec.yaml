@@ -22,6 +22,7 @@ dependencies:
   dio: ^4.0.6
   carousel_slider: ^4.2.1
   swipeable_page_route: ^0.3.0
+  substring_highlight: ^1.0.33
 
 dev_dependencies:
   flutter_test:
@@ -42,6 +43,7 @@ flutter:
     - foto_settings.json
     - foto_settings_dev.json
     - foto_settings_stg.json
+    - assets/data.json
   fonts:
     - family: Bellania
       fonts:

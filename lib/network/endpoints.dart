@@ -7,6 +7,14 @@ class Endpoints {
     return '$baseUrl/pgapi/gallery/content/';
   }
 
+  static String getAutocompleteUrl() {
+    return '$baseUrl/pgapi/autocomplete/';
+  }
+
+  static String getSearchUrl() {
+    return '$baseUrl/pgapi/search/';
+  }
+
   static String getLoginUrl() {
     return '$baseUrl/pgapi/user/login';
   }

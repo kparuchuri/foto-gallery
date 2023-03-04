@@ -78,12 +78,25 @@ class PhotoGallery extends StatelessWidget {
             }
           case GalleryScreen.routeName:
             {
-              final path = settings.arguments == null
-                  ? ''
-                  : settings.arguments as String;
+              String searchString = '';
+              String searchType = '';
+              bool isSearchScreen = false;
+              String path = '';
+              final Map arguments = settings.arguments as Map;
+
+              path = arguments['path']!;
+              isSearchScreen = arguments['isSearchScreen'];
+              searchString = arguments['searchString']!;
+              searchType = arguments['searchType'];
+
               return SwipeablePageRoute(
                 builder: (context) {
-                  return GalleryScreen(path: path);
+                  return GalleryScreen(
+                    path: path,
+                    isSearchScreen: isSearchScreen,
+                    searchStr: searchString,
+                    searchType: searchType,
+                  );
                 },
               );
             }

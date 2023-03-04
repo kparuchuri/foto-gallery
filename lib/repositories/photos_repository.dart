@@ -21,13 +21,7 @@ class PhotosRepository {
       Stopwatch stopwatch1 = Stopwatch()..start();
       response = await _helper.get(url);
       debugLog('getPhotos() rest call  executed in ${stopwatch1.elapsed}');
-      // print(response.body.toString());
-      //  print('******************* done calling phoeo' +
-      //    photoListFromJson(response.body['items']).toString());
-      debugLog('done calling');
-      // print(jsonDecode(response.body).toString());
-      // debugLog('done calling with photos ' +
-      // jsonDecode(utf8.decoder.convert(response.body))['result']);
+
       if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
         photos = decodeResponse(
             jsonDecode(utf8.decoder.convert(response.body))['result'], url);
@@ -45,15 +39,134 @@ class PhotosRepository {
     }
     debugLog('getPhotos() executed in ${stopwatch.elapsed}');
     return Response(photos, response.statusCode, response.headers);
-    //return photos;
+  }
+
+  Future<List<Map<String, String>>> autocompletePhotos(String searchStr) async {
+    List<Map<String, String>> results = [];
+    Response response;
+    Stopwatch stopwatch = Stopwatch()..start();
+    try {
+      String url;
+      url = Endpoints.getAutocompleteUrl() + searchStr;
+      debugLog('******************* calling searchPhotos for $url');
+      Stopwatch stopwatch1 = Stopwatch()..start();
+      response = await _helper.get(url);
+      debugLog('searchPhotos() rest call  executed in ${stopwatch1.elapsed}');
+
+      debugLog('done calling');
+      debugLog(jsonDecode(utf8.decoder.convert(response.body)).toString());
+      debugLog(
+          'done calling with searchPhotos ${jsonDecode(utf8.decoder.convert(response.body))['result']}');
+      if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
+        //  results = ['test1', 'test2'];
+
+        List<dynamic> rawResults =
+            jsonDecode(utf8.decoder.convert(response.body))['result'];
+        for (var i = 0; i < rawResults.length; i++) {
+          debugLog(rawResults[i]['text']);
+          debugLog(rawResults[i]['type'].toString());
+          if (rawResults[i]['type'] == 102 || rawResults[i]['type'] == 103) {
+            results.add({
+              'text': rawResults[i]['text'],
+              'type': rawResults[i]['type'].toString()
+            });
+          }
+        }
+      }
+    } on Exception catch (e, stack) {
+      debugLog(e.toString());
+      debugLog(stack.toString());
+
+      rethrow;
+    }
+    debugLog('getPhotos() executed in ${stopwatch.elapsed}');
+    return results;
+  }
+
+  Future<Response<List<Photo>>> searchPhotos(String type, String text) async {
+    List<Photo> photos = [];
+
+    Response response;
+    Stopwatch stopwatch = Stopwatch()..start();
+
+    try {
+      String url;
+      url =
+          '${Endpoints.getSearchUrl()}{"type":$type,"text":"$text","matchType":1}';
+
+      debugLog('******************* calling searchPhotos 2 for $url');
+      Stopwatch stopwatch1 = Stopwatch()..start();
+      response = await _helper.get(url);
+      debugLog('getPhotos() rest call  executed in ${stopwatch1.elapsed}');
+
+      if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
+        Map<String, dynamic> jsonData =
+            jsonDecode(utf8.decoder.convert(response.body))['result'];
+        if (jsonData["searchResult"]["searchQuery"]["type"] == 102) {
+          String path = jsonData["map"]["directories"][0]["path"] +
+              jsonData["map"]["directories"][0]['name'];
+          return getPhotosList(path, 1);
+        } else {
+          photos = decodeSearchResponse(jsonData, url);
+
+          photos = photos
+              .where((o) =>
+                  o.type == 'image' || o.type == 'video' || o.type == 'folder')
+              .toList();
+        }
+      }
+    } on Exception catch (e, stack) {
+      debugLog(e.toString());
+      debugLog(stack.toString());
+
+      rethrow;
+    }
+    debugLog('getPhotos() executed in ${stopwatch.elapsed}');
+    debugLog('got photos $photos');
+    return Response(photos, response.statusCode, response.headers);
   }
 
   List<Photo> decodeResponse(Map<String, dynamic> jsonData, String url) {
-    List<Photo> photos = [];
     List<dynamic> directories = jsonData["directory"]["directories"];
     List<dynamic> media = jsonData["directory"]["media"];
     debugLog('got dir ');
+    return decodeResponseInternal(url, directories, media);
+  }
 
+  List<Photo> decodeSearchResponse(Map<String, dynamic> jsonData, String url) {
+    List<Photo> photos = [];
+    debugLog('json data is $jsonData');
+    int type = jsonData["searchResult"]["searchQuery"]["type"];
+    debugLog('type  is $type');
+
+    if (type == 103) //media file
+    {
+      String fileName = jsonData["searchResult"]["media"][0]["n"];
+
+      String path = jsonData["map"]["directories"][0]["path"] +
+          jsonData["map"]["directories"][0]['name'];
+      Photo photo = Photo(
+        id: fileName,
+        type: 'image',
+        path: fileName,
+        url:
+            '${Endpoints.getContentUrl()}/$path/$fileName${Endpoints.thumbpathPostfix400}',
+        downloadUrl:
+            '${Endpoints.getContentUrl()}/$path/$fileName${Endpoints.bestFitPath}',
+      );
+      photos.add(photo);
+      debugLog('type 2 is $type');
+      if (jsonData["searchResult"]["media"][0]['m']['bitRate'] != null) {
+        photo.type = 'video';
+      }
+      debugLog('returning photo-=---------------- $photos');
+    }
+    return photos;
+  }
+
+  List<Photo> decodeResponseInternal(
+      String url, List<dynamic> directories, List<dynamic> media) {
+    List<Photo> photos = [];
     int length = directories.length;
     for (var i = 0; i < length; i++) {
       Map directory = directories[i];

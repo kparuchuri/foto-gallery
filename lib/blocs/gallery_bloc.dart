@@ -6,6 +6,7 @@ import 'package:foto_gallery/models/photos_list_response.dart';
 import 'package:foto_gallery/network/api_base_helper.dart';
 import 'package:foto_gallery/network/api_response.dart';
 import 'package:foto_gallery/repositories/photos_repository.dart';
+import 'package:foto_gallery/utils/utility.dart';
 
 class GalleryBloc extends BaseBloc {
   final PhotosRepository _repo = PhotosRepository();
@@ -32,9 +33,16 @@ class GalleryBloc extends BaseBloc {
   int pageNumber = 1;
   bool hasNextPage = true;
   String galleryFolderPath = '';
+  bool isSearchScreen = false;
+  String searchStr = '', searchType = '';
 
-  GalleryBloc(String folderPath) {
+  GalleryBloc(String folderPath, bool isSearchScreen, String searchStr,
+      String searchType) {
     galleryFolderPath = folderPath;
+    this.isSearchScreen = isSearchScreen;
+    this.searchStr = searchStr;
+    this.searchType = searchType;
+
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent &&
@@ -47,9 +55,11 @@ class GalleryBloc extends BaseBloc {
 
   Future<void> getPhotoList(StreamSink<ApiResponse<List<Photo>>> sink,
       [bool checkDB = false]) async {
+    debugLog('----------getting photo list');
     try {
-      final Response<List<Photo>> response =
-          await _repo.getPhotosList(galleryFolderPath, pageNumber);
+      final Response<List<Photo>> response = isSearchScreen
+          ? await _repo.searchPhotos(searchType, searchStr)
+          : await _repo.getPhotosList(galleryFolderPath, pageNumber);
 
       if (response.headers['link'].toString().contains('rel="next"')) {
         hasNextPage = true;
@@ -67,12 +77,18 @@ class GalleryBloc extends BaseBloc {
 
   void getInitialPhotosList() async {
     photosListSink.add(ApiResponse.loading());
-    await getPhotoList(photosListSink, true);
+    await getPhotoList(photosListSink);
   }
 
   void refreshPhotosList() async {
     photosListSink.add(ApiResponse.refreshing());
-    await getPhotoList(photosListSink, true);
+    await getPhotoList(photosListSink);
+  }
+
+  Future<List<Map<String, String>>> autocompletePhotos(String searchStr) async {
+    List<Map<String, String>> results =
+        await _repo.autocompletePhotos(searchStr);
+    return results;
   }
 
   void requestNextPage() async {
