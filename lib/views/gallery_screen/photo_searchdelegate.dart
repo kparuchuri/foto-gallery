@@ -9,26 +9,28 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
 
   PhotoSearchDelegate({
     required this.parentBloc,
-  }) : super(searchFieldLabel: '  Search for photos..');
+  }) : super(searchFieldLabel: '  Search for photos or folders..');
 
   @override
   ThemeData appBarTheme(BuildContext context) {
     return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSwatch(
+          brightness: Brightness.dark,
+          backgroundColor: Colors.black,
+          cardColor: Colors.black),
       hintColor: Colors.grey,
       primaryColor: Colors.white,
+      textSelectionTheme:
+          const TextSelectionThemeData(cursorColor: Colors.grey),
       textTheme: const TextTheme(
-          headline6: TextStyle(
-              // headline 6 affects the query text
+          titleLarge: TextStyle(
               color: Colors.white,
               fontSize: 16.0,
               fontWeight: FontWeight.bold)),
       appBarTheme: const AppBarTheme(
         color: Colors.black, // affects AppBar's background color
-        //backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        //  hintColor: Colors.grey, // affects the initial 'Search' text
-        //  toolbarTextStyle: TextStyle(color: Colors.white),
-        // titleTextStyle: TextStyle(color: Colors.white),
       ),
     );
   }
@@ -67,8 +69,6 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
             child: ListView.builder(
               //  shrinkWrap: true,
               itemBuilder: (context, index) {
-                debugLog(
-                    '---------building 2....${snapshot.data![index]['text']!}');
                 return ListTile(
                   textColor: Colors.white,
                   leading: snapshot.data![index]['type']! == '103'
@@ -114,15 +114,12 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
       future: _search(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          debugLog('---------building....');
           return Container(
             // padding: EdgeInsets.only(left: 60),
             color: Colors.black,
             child: ListView.builder(
               //  shrinkWrap: true,
               itemBuilder: (context, index) {
-                debugLog(
-                    '---------building 2....${snapshot.data![index]['text']!}');
                 return ListTile(
                   textColor: Colors.white,
                   leading: snapshot.data![index]['type']! == '103'
@@ -131,14 +128,11 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
                           color: Colors.white,
                         )
                       : const Icon(Icons.folder, color: Colors.white),
-                  //   title: Text(snapshot.data![index]['text']!),
-
                   title: SubstringHighlight(
                     text: snapshot.data![index]['text']!,
                     term: query,
                     textStyle: const TextStyle(color: Colors.white),
                     textStyleHighlight: const TextStyle(color: Colors.blue),
-                    //   textStyleHighlight: TextStyle(fontWeight: FontWeight.w700),
                   ),
                   onTap: () {
                     // close(context, snapshot.data![index]);
@@ -179,8 +173,6 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
   Future<List<Map<String, String>>> _search() async {
     debugLog('search callled');
     return getSuggestions(query);
-    //return [];
-    // return list.map((e) => ToDo.fromJson(e)).toList();
   }
 
   Future<List<Map<String, String>>> getSuggestions(String query) async {
