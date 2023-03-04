@@ -43,7 +43,7 @@ flutter:
     - foto_settings.json
     - foto_settings_dev.json
     - foto_settings_stg.json
-    - assets/data.json
+
   fonts:
     - family: Bellania
       fonts:
