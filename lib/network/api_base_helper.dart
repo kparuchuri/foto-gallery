@@ -76,7 +76,7 @@ NOT AUTHED {"error":{"code":1,"message":"Not authenticated","request":{"method":
       // debugLog('headers cooke is is ' + response.headers.map['set-cookie']!);
       isLoggedIn = true;
     } on DioError catch (e) {
-      print(e);
+      debugLog(e.toString());
       if (e.type == DioErrorType.connectTimeout) {
         throw Exception(
             'Unable to connect to backend server. Please try again');

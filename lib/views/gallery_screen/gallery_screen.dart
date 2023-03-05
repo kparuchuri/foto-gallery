@@ -179,6 +179,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
       QuiltedGridTile(1, 1),
       QuiltedGridTile(1, 1)
     ];
+    List<QuiltedGridTile> smallScreenZoomed = const [
+      QuiltedGridTile(2, 2),
+      QuiltedGridTile(1, 2),
+      QuiltedGridTile(1, 1),
+      QuiltedGridTile(1, 1),
+    ];
     List<QuiltedGridTile> largeScreen = const [
       QuiltedGridTile(2, 2),
       QuiltedGridTile(1, 1),
@@ -194,13 +200,23 @@ class _GalleryScreenState extends State<GalleryScreen> {
     ];
 
     bool isLargeScreen = screenWidth > 1200 ? true : false;
+    bool isZoomed = AppConstant.galleryThumbnailSize ==
+        AppConstant.galleryThumbnailSizeZoomed;
     return hasOnlyPhotos(_bloc.photoList)
         ? SliverQuiltedGridDelegate(
-            crossAxisCount: isLargeScreen ? 10 : 6,
+            crossAxisCount: isLargeScreen
+                ? 10
+                : isZoomed
+                    ? 4
+                    : 6,
             mainAxisSpacing: 2,
             crossAxisSpacing: 2,
             repeatPattern: QuiltedGridRepeatPattern.inverted,
-            pattern: isLargeScreen ? largeScreen : smallScreen,
+            pattern: isLargeScreen
+                ? largeScreen
+                : isZoomed
+                    ? smallScreenZoomed
+                    : smallScreen,
           )
         : SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount:
@@ -231,97 +247,91 @@ class _GalleryScreenState extends State<GalleryScreen> {
             }
           },
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
-                flex: 1,
-                fit: FlexFit.tight,
-                child: widget.path == '' && !widget.isSearchScreen
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.density_small_outlined),
-                            onPressed: () async {
-                              setState(() {
-                                galleryThumbnailSize = 150;
-                                AppConstant.galleryThumbnailSize = 150;
-                              });
-                            },
-                          ),
-                          const SizedBox(
-                            width: 5,
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.density_medium_outlined),
-                            onPressed: () async {
-                              setState(() {
-                                galleryThumbnailSize = 250;
-                                AppConstant.galleryThumbnailSize = 250;
-                              });
-                            },
-                          ),
-                        ],
-                      )
-                    : const SizedBox(),
-              ),
-              Flexible(
-                flex: 1,
+              if (widget.path == '' && !widget.isSearchScreen)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  //  fit: FlexFit.tight,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.density_small_outlined),
+                        onPressed: () async {
+                          setState(() {
+                            galleryThumbnailSize =
+                                AppConstant.galleryThumbnailSizeUnZoomed;
+                            AppConstant.galleryThumbnailSize =
+                                galleryThumbnailSize;
+                          });
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.density_medium_outlined),
+                        onPressed: () async {
+                          setState(() {
+                            galleryThumbnailSize =
+                                AppConstant.galleryThumbnailSizeZoomed;
+                            AppConstant.galleryThumbnailSize =
+                                galleryThumbnailSize;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              Expanded(
                 child: Center(
-                    child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                  child: widget.isSearchScreen && widget.path == ''
-                      ? Text(
-                          widget.searchStr,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                          ),
-                        )
-                      : widget.path == ''
-                          ? const Text(
-                              'Foto',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Bellania',
-                                color: Colors.white,
-                                fontSize: 18.0,
-                              ),
-                            )
-                          : Text(
-                              cleanupString(widget.path),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16.0,
-                              ),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    },
+                    child: widget.isSearchScreen && widget.path == ''
+                        ? Text(
+                            widget.searchStr,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.0,
                             ),
-                )),
-              ),
-              Flexible(
-                flex: 1,
-                fit: FlexFit.tight,
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: (!widget.isSearchScreen)
-                      ? IconButton(
-                          icon: const Icon(Icons.search_rounded),
-                          onPressed: () async {
-                            await showSearch<Map<String, String>>(
-                              context: context,
-                              query: null,
-                              delegate: PhotoSearchDelegate(
-                                parentBloc: _bloc,
+                          )
+                        : widget.path == ''
+                            ? const Text(
+                                'Foto',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Bellania',
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                ),
+                              )
+                            : Text(
+                                cleanupString(widget.path),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.0,
+                                ),
                               ),
-                            );
-                          },
-                        )
-                      : const SizedBox(),
+                  ),
                 ),
               ),
+              if (!widget.isSearchScreen)
+                Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.search_rounded),
+                      onPressed: () async {
+                        await showSearch<Map<String, String>>(
+                          context: context,
+                          query: null,
+                          delegate: PhotoSearchDelegate(
+                            parentBloc: _bloc,
+                          ),
+                        );
+                      },
+                    )),
             ],
           ),
         ));
