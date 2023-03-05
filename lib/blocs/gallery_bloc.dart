@@ -52,9 +52,10 @@ class GalleryBloc extends BaseBloc {
       [bool checkDB = false]) async {
     debugLog('----------getting photo list');
     try {
-      final Response<List<Photo>> response = isSearchScreen
-          ? await _repo.searchPhotos(searchType, searchStr)
-          : await _repo.getPhotosList(galleryFolderPath, pageNumber);
+      final Response<List<Photo>> response =
+          isSearchScreen && galleryFolderPath == ''
+              ? await _repo.searchPhotos(searchType, searchStr)
+              : await _repo.getPhotosList(galleryFolderPath, pageNumber);
 
       if (response.headers['link'].toString().contains('rel="next"')) {
         hasNextPage = true;

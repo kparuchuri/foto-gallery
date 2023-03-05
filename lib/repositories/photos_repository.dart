@@ -166,7 +166,6 @@ class PhotosRepository {
         photo.type = 'video';
       }
       photos.add(photo);
-      //  print(photo);
     }
     debugLog('done getting photos ');
     return photos;

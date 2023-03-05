@@ -33,6 +33,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
   late GalleryBloc _bloc;
   Map hover = {};
   double screenWidth = 0;
+  double galleryThumbnailSize = AppConstant.galleryThumbnailSize;
+
   @override
   void initState() {
     super.initState();
@@ -106,7 +108,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
               controller: _bloc.scrollController,
               itemBuilder: (context, index) {
                 return _bloc.photoList[index].type == 'folder'
-                    ? FolderCard(photo: _bloc.photoList[index])
+                    ? FolderCard(
+                        photo: _bloc.photoList[index],
+                        isSearchScreen: widget.isSearchScreen)
                     : _bloc.photoList[index].type == 'video'
                         ? PhotoVideoCard(
                             onTapFn: () {
@@ -199,9 +203,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             pattern: isLargeScreen ? largeScreen : smallScreen,
           )
         : SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: (MediaQuery.of(context).size.width /
-                    AppConstant.galleryThumbnailSize)
-                .round(),
+            crossAxisCount:
+                (MediaQuery.of(context).size.width / galleryThumbnailSize)
+                    .round(),
             crossAxisSpacing: AppConstant.galleryCrossAxisSpacing,
             mainAxisSpacing: AppConstant.galleryMainAxisSpacing,
           );
@@ -222,7 +226,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
             if (event is RawKeyDownEvent) {
               Object key = event.logicalKey;
               if (key == LogicalKeyboardKey.escape) {
-                debugLog('*********** escape  pressed  on title');
                 Navigator.of(context).maybePop();
               }
             }
@@ -230,9 +233,46 @@ class _GalleryScreenState extends State<GalleryScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Expanded(
+              Flexible(
+                flex: 1,
+                fit: FlexFit.tight,
+                child: widget.path == '' && !widget.isSearchScreen
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.density_small_outlined),
+                            onPressed: () async {
+                              setState(() {
+                                galleryThumbnailSize = 150;
+                                AppConstant.galleryThumbnailSize = 150;
+                              });
+                            },
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.density_medium_outlined),
+                            onPressed: () async {
+                              setState(() {
+                                galleryThumbnailSize = 250;
+                                AppConstant.galleryThumbnailSize = 250;
+                              });
+                            },
+                          ),
+                        ],
+                      )
+                    : const SizedBox(),
+              ),
+              Flexible(
+                flex: 1,
                 child: Center(
-                  child: widget.isSearchScreen
+                    child: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                  child: widget.isSearchScreen && widget.path == ''
                       ? Text(
                           widget.searchStr,
                           textAlign: TextAlign.center,
@@ -259,36 +299,35 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 fontSize: 16.0,
                               ),
                             ),
+                )),
+              ),
+              Flexible(
+                flex: 1,
+                fit: FlexFit.tight,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: (!widget.isSearchScreen)
+                      ? IconButton(
+                          icon: const Icon(Icons.search_rounded),
+                          onPressed: () async {
+                            await showSearch<Map<String, String>>(
+                              context: context,
+                              query: null,
+                              delegate: PhotoSearchDelegate(
+                                parentBloc: _bloc,
+                              ),
+                            );
+                          },
+                        )
+                      : const SizedBox(),
                 ),
               ),
-              if (!widget.isSearchScreen && widget.path == '')
-                IconButton(
-                  icon: const Icon(Icons.search_rounded),
-/*                   onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      PhotoSearch.routeName,
-                      arguments: _bloc,
-                    );
-                  }, */
-                  //        onPressed: () => _searchDialogBuilder(context),
-                  onPressed: () async {
-                    await showSearch<Map<String, String>>(
-                      context: context,
-                      query: null,
-                      delegate: PhotoSearchDelegate(
-                        parentBloc: _bloc,
-                      ),
-                    );
-                  },
-                ),
             ],
           ),
         ));
   }
 
   Future<List<Map<String, String>>> getSuggestions(String query) async {
-    // await Future<void>.delayed(const Duration(seconds: 1));
     List<Map<String, String>> photos = await _bloc.autocompletePhotos(query);
     debugLog('got photos from search $photos');
     return photos;
@@ -325,10 +364,11 @@ class FolderCard extends StatefulWidget {
   const FolderCard({
     super.key,
     required this.photo,
+    required this.isSearchScreen,
   });
 
   final Photo photo;
-
+  final bool isSearchScreen;
   @override
   State<FolderCard> createState() => _FolderCardState();
 }
@@ -349,7 +389,7 @@ class _FolderCardState extends State<FolderCard> {
             GalleryScreen.routeName,
             arguments: {
               'path': widget.photo.path,
-              'isSearchScreen': false,
+              'isSearchScreen': widget.isSearchScreen,
               'searchString': '',
               'searchType': ''
             },
