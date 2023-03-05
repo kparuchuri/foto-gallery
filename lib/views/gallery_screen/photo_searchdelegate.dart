@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:foto_gallery/blocs/gallery_bloc.dart';
 import 'package:foto_gallery/utils/utility.dart';
 import 'package:foto_gallery/views/gallery_screen/gallery_screen.dart';
+import 'package:foto_gallery/views/photo_preview_screen/photo_preview_screen.dart';
+import 'package:foto_gallery/views/photo_preview_screen/video_screen.dart';
 import 'package:substring_highlight/substring_highlight.dart';
 
 class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
@@ -59,51 +61,7 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
 
   @override
   Widget buildResults(BuildContext context) {
-    return FutureBuilder<List<Map<String, String>>>(
-      future: _search(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          debugLog('---------building....');
-          return Container(
-            color: Colors.black,
-            child: ListView.builder(
-              //  shrinkWrap: true,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  textColor: Colors.white,
-                  leading: snapshot.data![index]['type']! == '103'
-                      ? const Icon(Icons.photo, color: Colors.white)
-                      : const Icon(Icons.folder, color: Colors.white),
-                  title: Text(snapshot.data![index]['text']!),
-                  onTap: () {
-                    // close(context, snapshot.data![index]);
-
-                    Navigator.pushNamed(
-                      context,
-                      GalleryScreen.routeName,
-                      arguments: {
-                        'path': '',
-                        'isSearchScreen': true,
-                        'searchString': snapshot.data![index]['text']!,
-                        'searchType': snapshot.data![index]['type']!
-                      },
-                    );
-                  },
-                );
-              },
-              itemCount: snapshot.data!.length,
-            ),
-          );
-        } else {
-          return Container(
-            color: Colors.black,
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-      },
-    );
+    return buildSuggestions(context);
   }
 
   @override
@@ -135,18 +93,44 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
                     textStyleHighlight: const TextStyle(color: Colors.blue),
                   ),
                   onTap: () {
-                    // close(context, snapshot.data![index]);
-
-                    Navigator.pushNamed(
-                      context,
-                      GalleryScreen.routeName,
-                      arguments: {
-                        'path': '',
-                        'isSearchScreen': true,
-                        'searchString': snapshot.data![index]['text']!,
-                        'searchType': snapshot.data![index]['type']!
-                      },
-                    );
+                    if (snapshot.data![index]['type']! == '103') {
+                      //Photo
+                      parentBloc
+                          .getSearchPhotos(snapshot.data![index]['text']!,
+                              snapshot.data![index]['type']!)
+                          .then((photos) {
+                        if (photos[0].type == 'video') {
+                          Navigator.pushNamed(
+                            context,
+                            VideoScreen.routeName,
+                            arguments: {
+                              'title': photos[0].id,
+                              'filePath': photos[0].downloadUrl
+                            },
+                          );
+                        } else {
+                          Navigator.pushNamed(
+                            context,
+                            PhotoPreviewScreen.routeName,
+                            arguments: PhotoPreviewScreenArgs(
+                              photoList: photos,
+                              index: 0,
+                            ),
+                          );
+                        }
+                      });
+                    } else {
+                      Navigator.pushNamed(
+                        context,
+                        GalleryScreen.routeName,
+                        arguments: {
+                          'path': '',
+                          'isSearchScreen': true,
+                          'searchString': snapshot.data![index]['text']!,
+                          'searchType': snapshot.data![index]['type']!
+                        },
+                      );
+                    }
                   },
                 );
               },
@@ -163,11 +147,6 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
         }
       },
     );
-  }
-
-  @override
-  void showSuggestions(BuildContext context) {
-    debugLog('show suggestions called..');
   }
 
   Future<List<Map<String, String>>> _search() async {

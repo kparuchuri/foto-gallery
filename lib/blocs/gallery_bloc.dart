@@ -36,13 +36,8 @@ class GalleryBloc extends BaseBloc {
   bool isSearchScreen = false;
   String searchStr = '', searchType = '';
 
-  GalleryBloc(String folderPath, bool isSearchScreen, String searchStr,
-      String searchType) {
-    galleryFolderPath = folderPath;
-    this.isSearchScreen = isSearchScreen;
-    this.searchStr = searchStr;
-    this.searchType = searchType;
-
+  GalleryBloc(this.galleryFolderPath, this.isSearchScreen, this.searchStr,
+      this.searchType) {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
               _scrollController.position.maxScrollExtent &&
@@ -73,6 +68,19 @@ class GalleryBloc extends BaseBloc {
     } catch (e) {
       sink.add(ApiResponse.error(e.toString()));
     }
+  }
+
+  Future<List<Photo>> getSearchPhotos(String text, String type) async {
+    debugLog('----------getting photo ');
+    List<Photo> photos = [];
+    try {
+      final Response<List<Photo>> response =
+          await _repo.searchPhotos(type, text);
+      photos = response.body;
+    } catch (e) {
+      debugLog(e.toString());
+    }
+    return photos;
   }
 
   void getInitialPhotosList() async {

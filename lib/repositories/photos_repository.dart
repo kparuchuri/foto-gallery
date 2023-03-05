@@ -52,14 +52,10 @@ class PhotosRepository {
       Stopwatch stopwatch1 = Stopwatch()..start();
       response = await _helper.get(url);
       debugLog('searchPhotos() rest call  executed in ${stopwatch1.elapsed}');
-
-      debugLog('done calling');
       debugLog(jsonDecode(utf8.decoder.convert(response.body)).toString());
       debugLog(
           'done calling with searchPhotos ${jsonDecode(utf8.decoder.convert(response.body))['result']}');
       if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
-        //  results = ['test1', 'test2'];
-
         List<dynamic> rawResults =
             jsonDecode(utf8.decoder.convert(response.body))['result'];
         for (var i = 0; i < rawResults.length; i++) {
@@ -93,7 +89,6 @@ class PhotosRepository {
       String url;
       url =
           '${Endpoints.getSearchUrl()}{"type":$type,"text":"$text","matchType":1}';
-
       debugLog('******************* calling searchPhotos 2 for $url');
       Stopwatch stopwatch1 = Stopwatch()..start();
       response = await _helper.get(url);
@@ -103,8 +98,12 @@ class PhotosRepository {
         Map<String, dynamic> jsonData =
             jsonDecode(utf8.decoder.convert(response.body))['result'];
         if (jsonData["searchResult"]["searchQuery"]["type"] == 102) {
-          String path = jsonData["map"]["directories"][0]["path"] +
-              jsonData["map"]["directories"][0]['name'];
+          //Directory
+          String path = jsonData["searchResult"]["searchQuery"]["text"];
+          if (jsonData["map"]["directories"] != null) {
+            path = jsonData["map"]["directories"][0]["path"] +
+                jsonData["map"]["directories"][0]['name'];
+          }
           return getPhotosList(path, 1);
         } else {
           photos = decodeSearchResponse(jsonData, url);
@@ -121,8 +120,8 @@ class PhotosRepository {
 
       rethrow;
     }
-    debugLog('getPhotos() executed in ${stopwatch.elapsed}');
-    debugLog('got photos $photos');
+    debugLog('searchPhotos() executed in ${stopwatch.elapsed}');
+    debugLog('got searchPhotos $photos');
     return Response(photos, response.statusCode, response.headers);
   }
 
@@ -131,37 +130,6 @@ class PhotosRepository {
     List<dynamic> media = jsonData["directory"]["media"];
     debugLog('got dir ');
     return decodeResponseInternal(url, directories, media);
-  }
-
-  List<Photo> decodeSearchResponse(Map<String, dynamic> jsonData, String url) {
-    List<Photo> photos = [];
-    debugLog('json data is $jsonData');
-    int type = jsonData["searchResult"]["searchQuery"]["type"];
-    debugLog('type  is $type');
-
-    if (type == 103) //media file
-    {
-      String fileName = jsonData["searchResult"]["media"][0]["n"];
-
-      String path = jsonData["map"]["directories"][0]["path"] +
-          jsonData["map"]["directories"][0]['name'];
-      Photo photo = Photo(
-        id: fileName,
-        type: 'image',
-        path: fileName,
-        url:
-            '${Endpoints.getContentUrl()}/$path/$fileName${Endpoints.thumbpathPostfix400}',
-        downloadUrl:
-            '${Endpoints.getContentUrl()}/$path/$fileName${Endpoints.bestFitPath}',
-      );
-      photos.add(photo);
-      debugLog('type 2 is $type');
-      if (jsonData["searchResult"]["media"][0]['m']['bitRate'] != null) {
-        photo.type = 'video';
-      }
-      debugLog('returning photo-=---------------- $photos');
-    }
-    return photos;
   }
 
   List<Photo> decodeResponseInternal(
@@ -201,6 +169,38 @@ class PhotosRepository {
       //  print(photo);
     }
     debugLog('done getting photos ');
+    return photos;
+  }
+
+  List<Photo> decodeSearchResponse(Map<String, dynamic> jsonData, String url) {
+    List<Photo> photos = [];
+    debugLog('json data is $jsonData');
+    int type = jsonData["searchResult"]["searchQuery"]["type"];
+    debugLog('type  is $type');
+
+    if (type == 103) //media file
+    {
+      String fileName = jsonData["searchResult"]["media"][0]["n"];
+
+      String path = jsonData["map"]["directories"][0]["path"] +
+          jsonData["map"]["directories"][0]['name'];
+      Photo photo = Photo(
+        id: fileName,
+        type: 'image',
+        path: fileName,
+        url:
+            '${Endpoints.getContentUrl()}/$path/$fileName${Endpoints.bestFitPath}',
+        downloadUrl:
+            '${Endpoints.getContentUrl()}/$path/$fileName${Endpoints.bestFitPath}',
+      );
+
+      debugLog('type 2 is $type');
+      if (jsonData["searchResult"]["media"][0]['m']['bitRate'] != null) {
+        photo.type = 'video';
+      }
+      photos.add(photo);
+      debugLog('returning photo-=---------------- $photos');
+    }
     return photos;
   }
 }
