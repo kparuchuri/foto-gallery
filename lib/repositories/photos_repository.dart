@@ -7,10 +7,10 @@ import 'package:foto_gallery/utils/utility.dart';
 class PhotosRepository {
   final ApiBaseHelper _helper = ApiBaseHelper();
 
-  Future<Response<List<Photo>>> getPhotosList(
-      String galleryFolderPath, int pageNumber) async {
+  Future<PhotoResponse<List<Photo>>> getPhotosList(
+      String galleryFolderPath) async {
     List<Photo> photos = [];
-    Response response;
+    PhotoResponse response;
     Stopwatch stopwatch = Stopwatch()..start();
     try {
       String url;
@@ -34,16 +34,15 @@ class PhotosRepository {
     } on Exception catch (e, stack) {
       debugLog(e.toString());
       debugLog(stack.toString());
-
       rethrow;
     }
     debugLog('getPhotos() executed in ${stopwatch.elapsed}');
-    return Response(photos, response.statusCode, response.headers);
+    return PhotoResponse(photos, response.statusCode, response.headers);
   }
 
   Future<List<Map<String, String>>> autocompletePhotos(String searchStr) async {
     List<Map<String, String>> results = [];
-    Response response;
+    PhotoResponse response;
     Stopwatch stopwatch = Stopwatch()..start();
     try {
       String url;
@@ -72,23 +71,21 @@ class PhotosRepository {
     } on Exception catch (e, stack) {
       debugLog(e.toString());
       debugLog(stack.toString());
-
       rethrow;
     }
-    debugLog('getPhotos() executed in ${stopwatch.elapsed}');
+    debugLog('autocompletePhotos() executed in ${stopwatch.elapsed}');
     return results;
   }
 
-  Future<Response<List<Photo>>> searchPhotos(String type, String text) async {
+  Future<PhotoResponse<List<Photo>>> searchPhotos(
+      String photoType, String photoSearchStr) async {
     List<Photo> photos = [];
-
-    Response response;
+    PhotoResponse response;
     Stopwatch stopwatch = Stopwatch()..start();
-
     try {
       String url;
       url =
-          '${Endpoints.getSearchUrl()}{"type":$type,"text":"$text","matchType":1}';
+          '${Endpoints.getSearchUrl()}{"type":$photoType,"text":"$photoSearchStr","matchType":1}';
       debugLog('******************* calling searchPhotos 2 for $url');
       Stopwatch stopwatch1 = Stopwatch()..start();
       response = await _helper.get(url);
@@ -104,10 +101,10 @@ class PhotosRepository {
             path = jsonData["map"]["directories"][0]["path"] +
                 jsonData["map"]["directories"][0]['name'];
           }
-          return getPhotosList(path, 1);
+          return getPhotosList(path);
         } else {
+          //Photo or Video
           photos = decodeSearchResponse(jsonData, url);
-
           photos = photos
               .where((o) =>
                   o.type == 'image' || o.type == 'video' || o.type == 'folder')
@@ -122,23 +119,16 @@ class PhotosRepository {
     }
     debugLog('searchPhotos() executed in ${stopwatch.elapsed}');
     debugLog('got searchPhotos $photos');
-    return Response(photos, response.statusCode, response.headers);
+    return PhotoResponse(photos, response.statusCode, response.headers);
   }
 
   List<Photo> decodeResponse(Map<String, dynamic> jsonData, String url) {
+    List<Photo> photos = [];
     List<dynamic> directories = jsonData["directory"]["directories"];
     List<dynamic> media = jsonData["directory"]["media"];
-    debugLog('got dir ');
-    return decodeResponseInternal(url, directories, media);
-  }
-
-  List<Photo> decodeResponseInternal(
-      String url, List<dynamic> directories, List<dynamic> media) {
-    List<Photo> photos = [];
     int length = directories.length;
     for (var i = 0; i < length; i++) {
       Map directory = directories[i];
-      debugLog('got dir ');
       Photo photo = Photo(
         id: directory['name'],
         type: 'folder',
@@ -150,7 +140,6 @@ class PhotosRepository {
                 Endpoints.thumbpathPostfix
             : directory['path'] + directory['name'],
       );
-
       photos.add(photo);
     }
     debugLog('got media ');
@@ -175,12 +164,9 @@ class PhotosRepository {
     List<Photo> photos = [];
     debugLog('json data is $jsonData');
     int type = jsonData["searchResult"]["searchQuery"]["type"];
-    debugLog('type  is $type');
-
     if (type == 103) //media file
     {
       String fileName = jsonData["searchResult"]["media"][0]["n"];
-
       String path = jsonData["map"]["directories"][0]["path"] +
           jsonData["map"]["directories"][0]['name'];
       Photo photo = Photo(
@@ -198,7 +184,8 @@ class PhotosRepository {
         photo.type = 'video';
       }
       photos.add(photo);
-      debugLog('returning photo-=---------------- $photos');
+      debugLog(
+          'decodeSearchResponse returning photo-=---------------- $photos');
     }
     return photos;
   }

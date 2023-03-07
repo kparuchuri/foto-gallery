@@ -99,7 +99,7 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
                     if (snapshot.data![index]['type']! == '103') {
                       //Photo
                       parentBloc
-                          .getSearchPhotos(snapshot.data![index]['text']!,
+                          .searchPhotos(snapshot.data![index]['text']!,
                               snapshot.data![index]['type']!)
                           .then((photos) {
                         if (photos[0].type == 'video') {

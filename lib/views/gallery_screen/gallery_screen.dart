@@ -12,13 +12,12 @@ import 'package:foto_gallery/views/photo_preview_screen/photo_preview_screen.dar
 import 'package:foto_gallery/views/photo_preview_screen/video_screen.dart';
 import 'package:foto_gallery/widgets/error.dart';
 
-// ignore: must_be_immutable
 class GalleryScreen extends StatefulWidget {
   static const String routeName = 'gallery-screen';
-  String path;
-  bool isSearchScreen;
-  String searchStr, searchType;
-  GalleryScreen(
+  final String path;
+  final bool isSearchScreen;
+  final String searchStr, searchType;
+  const GalleryScreen(
       {super.key,
       this.path = '',
       this.isSearchScreen = false,
@@ -40,14 +39,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
     super.initState();
     _bloc = GalleryBloc(widget.path, widget.isSearchScreen, widget.searchStr,
         widget.searchType);
-    _bloc.requestNextPageStream.listen((event) {
-      if (event.status == Status.loading) {
-      } else if (event.status == Status.completed) {
-        setState(() {});
-      } else if (event.status == Status.error) {
-        showSnackBar(context, event.message, true);
-      }
-    });
     _bloc.getInitialPhotosList();
   }
 

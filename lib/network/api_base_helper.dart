@@ -90,7 +90,7 @@ NOT AUTHED {"error":{"code":1,"message":"Not authenticated","request":{"method":
   }
 
   Future<dynamic> get(String url) async {
-    Response returnResponse;
+    PhotoResponse returnResponse;
     try {
       // await refreshToken();
       if (!isLoggedIn) await login();
@@ -107,7 +107,7 @@ NOT AUTHED {"error":{"code":1,"message":"Not authenticated","request":{"method":
         },
       );
       debugLog('got response');
-      returnResponse = Response(
+      returnResponse = PhotoResponse(
           _returnResponse(response), response.statusCode, response.headers);
     } on SocketException {
       throw FetchDataException('No Internet connection');
@@ -141,10 +141,10 @@ NOT AUTHED {"error":{"code":1,"message":"Not authenticated","request":{"method":
   }
 }
 
-class Response<T> {
+class PhotoResponse<T> {
   T body;
   int statusCode;
   Map<String, dynamic> headers;
 
-  Response(this.body, this.statusCode, this.headers);
+  PhotoResponse(this.body, this.statusCode, this.headers);
 }
