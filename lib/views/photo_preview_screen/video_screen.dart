@@ -78,7 +78,7 @@ class _VideoScreenState extends State<VideoScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       floatingActionButton: FloatingActionButton(
           backgroundColor: Colors.transparent,
-          foregroundColor: Colors.white,
+          foregroundColor: Colors.grey,
           elevation: 10,
           child: const Icon(Icons.close_sharp),
           onPressed: () => Navigator.of(context).pop()),

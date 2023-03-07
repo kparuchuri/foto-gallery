@@ -89,7 +89,7 @@ class GalleryBloc extends BaseBloc {
     await getPhotoList(photosListSink);
   }
 
-  void refreshPhotosList() async {
+  Future<void> refreshPhotosList() async {
     photosListSink.add(ApiResponse.refreshing());
     await getPhotoList(photosListSink);
   }

@@ -121,7 +121,10 @@ class _PhotoPreviewScreenState extends State<PhotoPreviewScreen> {
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           elevation: 10,
-          child: const Icon(Icons.arrow_back),
+          child: const Icon(
+            Icons.arrow_back,
+            color: Colors.grey,
+          ),
           onPressed: () => Navigator.of(context).pop()),
       body: photoView(),
     );

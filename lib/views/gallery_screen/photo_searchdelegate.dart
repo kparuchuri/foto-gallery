@@ -52,7 +52,10 @@ class PhotoSearchDelegate extends SearchDelegate<Map<String, String>> {
   @override
   Widget buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back),
+      icon: const Icon(
+        Icons.arrow_back,
+        color: Colors.grey,
+      ),
       onPressed: () {
         close(context, {});
       },

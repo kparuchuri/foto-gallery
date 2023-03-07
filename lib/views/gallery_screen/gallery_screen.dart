@@ -62,15 +62,23 @@ class _GalleryScreenState extends State<GalleryScreen> {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
         body: RefreshIndicator(
+      color: Colors.white,
+      backgroundColor: Colors.transparent,
       edgeOffset: AppBar().preferredSize.height,
       onRefresh: () async {
-        await Future.delayed(Duration(seconds: 1));
-        return _bloc.refreshPhotosList();
+        await Future.wait([
+          Future.delayed(const Duration(seconds: 1)),
+          _bloc.refreshPhotosList()
+        ]);
+        return;
       },
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: <Widget>[
           SliverAppBar(
+            iconTheme: const IconThemeData(
+              color: Colors.grey,
+            ),
             pinned: false,
             snap: true,
             floating: true,
@@ -88,7 +96,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
               } else if (snapshot.data?.status == Status.completed ||
                   snapshot.data?.status == Status.refreshing) {
                 return _bloc.photoList.isEmpty
-                    ? SliverFillRemaining(
+                    ? const SliverFillRemaining(
                         child: Center(
                           child: Text(
                             "No photos yet in this folder.",
@@ -105,11 +113,12 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     child: Error(
                         errorMessage: snapshot.data?.message,
                         onRetryPressed: () => _bloc.getInitialPhotosList()));
-              } else
+              } else {
                 return const SliverToBoxAdapter(child: SizedBox.shrink());
+              }
             },
           ),
-          SliverToBoxAdapter(child: SizedBox(height: 20))
+          const SliverToBoxAdapter(child: SizedBox(height: 20))
         ],
       ),
     ));
@@ -239,10 +248,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
   AppBar appBar() {
     return AppBar(
         iconTheme: const IconThemeData(
-          color: Colors.white,
+          color: Colors.grey,
         ),
         backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.grey,
         centerTitle: true,
         title: RawKeyboardListener(
           autofocus: true,
@@ -263,8 +272,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       AppConstant.galleryThumbnailSizeZoomed,
                   child: IconButton(
                     icon: const Icon(
-                      Icons.density_small_outlined,
-                      size: 20,
+                      Icons.apps_sharp,
+                      color: Colors.grey,
                     ),
                     onPressed: () async {
                       setState(() {
@@ -279,7 +288,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   visible: galleryThumbnailSize ==
                       AppConstant.galleryThumbnailSizeUnZoomed,
                   child: IconButton(
-                    icon: const Icon(Icons.density_medium_outlined, size: 22),
+                    icon: const Icon(
+                      Icons.grid_view_sharp,
+                      color: Colors.grey,
+                    ),
                     onPressed: () async {
                       setState(() {
                         galleryThumbnailSize =
@@ -300,7 +312,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         ? Text(
                             widget.searchStr,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: Colors.pinkAccent,
                               fontSize: 16.0,
                             ),
                           )
@@ -309,14 +321,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
                                 'Foto',
                                 style: TextStyle(
                                   fontFamily: 'Bellania',
-                                  color: Colors.white,
+                                  color: Colors.pinkAccent,
                                   fontSize: 18.0,
                                 ),
                               )
                             : Text(
                                 cleanupString(widget.path),
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: Colors.pinkAccent,
                                   fontSize: 16.0,
                                 ),
                               ),
@@ -327,7 +339,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
                 Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
-                      icon: const Icon(Icons.search_rounded),
+                      icon: const Icon(
+                        Icons.search_rounded,
+                        color: Colors.grey,
+                      ),
                       onPressed: () async {
                         await showSearch<Map<String, String>>(
                           context: context,
