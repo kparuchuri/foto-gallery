@@ -123,7 +123,24 @@ class _GalleryScreenState extends State<GalleryScreen> {
         return _bloc.photoList[index].type == 'folder'
             ? FolderCard(
                 photo: _bloc.photoList[index],
-                isSearchScreen: widget.isSearchScreen)
+                isSearchScreen: widget.isSearchScreen,
+                onTapFn: () {
+                  Navigator.pushNamed(
+                    context,
+                    GalleryScreen.routeName,
+                    arguments: {
+                      'path': _bloc.photoList[index].path,
+                      'isSearchScreen': widget.isSearchScreen,
+                      'searchString': '',
+                      'searchType': ''
+                    },
+                  ).then((value) {
+                    setState(() {
+                      galleryThumbnailSize = AppConstant.galleryThumbnailSize;
+                    });
+                  });
+                },
+              )
             : _bloc.photoList[index].type == 'video'
                 ? PhotoVideoCard(
                     onTapFn: () {
@@ -244,6 +261,62 @@ class _GalleryScreenState extends State<GalleryScreen> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.grey,
         centerTitle: true,
+        actions: [
+          Visibility(
+            visible:
+                galleryThumbnailSize == AppConstant.galleryThumbnailSizeZoomed,
+            child: IconButton(
+              icon: const Icon(
+                Icons.apps_sharp,
+                color: Colors.grey,
+              ),
+              onPressed: () async {
+                setState(() {
+                  galleryThumbnailSize =
+                      AppConstant.galleryThumbnailSizeUnZoomed;
+                  AppConstant.galleryThumbnailSize = galleryThumbnailSize;
+                });
+              },
+            ),
+          ),
+          Visibility(
+            visible: galleryThumbnailSize ==
+                AppConstant.galleryThumbnailSizeUnZoomed,
+            child: IconButton(
+              icon: const Icon(
+                Icons.grid_view_sharp,
+                color: Colors.grey,
+              ),
+              onPressed: () async {
+                setState(() {
+                  galleryThumbnailSize = AppConstant.galleryThumbnailSizeZoomed;
+                  AppConstant.galleryThumbnailSize = galleryThumbnailSize;
+                });
+              },
+            ),
+          ),
+          Visibility(
+            visible: !widget.isSearchScreen,
+            child: IconButton(
+              icon: const Icon(
+                Icons.search_rounded,
+                color: Colors.grey,
+              ),
+              onPressed: () async {
+                await showSearch<Map<String, String>>(
+                  context: context,
+                  query: null,
+                  delegate: PhotoSearchDelegate(
+                    parentBloc: _bloc,
+                  ),
+                );
+                setState(() {
+                  galleryThumbnailSize = AppConstant.galleryThumbnailSize;
+                });
+              },
+            ),
+          ),
+        ],
         title: RawKeyboardListener(
           autofocus: true,
           focusNode: FocusNode(),
@@ -255,96 +328,34 @@ class _GalleryScreenState extends State<GalleryScreen> {
               }
             }
           },
-          child: Row(
-            children: [
-              if (widget.path == '' && !widget.isSearchScreen) ...[
-                Visibility(
-                  visible: galleryThumbnailSize ==
-                      AppConstant.galleryThumbnailSizeZoomed,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.apps_sharp,
-                      color: Colors.grey,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+            child: widget.isSearchScreen && widget.path == ''
+                ? Text(
+                    widget.searchStr,
+                    style: const TextStyle(
+                      color: Colors.pinkAccent,
+                      fontSize: 16.0,
                     ),
-                    onPressed: () async {
-                      setState(() {
-                        galleryThumbnailSize =
-                            AppConstant.galleryThumbnailSizeUnZoomed;
-                        AppConstant.galleryThumbnailSize = galleryThumbnailSize;
-                      });
-                    },
-                  ),
-                ),
-                Visibility(
-                  visible: galleryThumbnailSize ==
-                      AppConstant.galleryThumbnailSizeUnZoomed,
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.grid_view_sharp,
-                      color: Colors.grey,
-                    ),
-                    onPressed: () async {
-                      setState(() {
-                        galleryThumbnailSize =
-                            AppConstant.galleryThumbnailSizeZoomed;
-                        AppConstant.galleryThumbnailSize = galleryThumbnailSize;
-                      });
-                    },
-                  ),
-                )
-              ],
-              Expanded(
-                child: Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).popUntil((route) => route.isFirst);
-                    },
-                    child: widget.isSearchScreen && widget.path == ''
-                        ? Text(
-                            widget.searchStr,
-                            style: const TextStyle(
-                              color: Colors.pinkAccent,
-                              fontSize: 16.0,
-                            ),
-                          )
-                        : widget.path == ''
-                            ? const Text(
-                                'Foto',
-                                style: TextStyle(
-                                  fontFamily: 'Bellania',
-                                  color: Colors.pinkAccent,
-                                  fontSize: 18.0,
-                                ),
-                              )
-                            : Text(
-                                cleanupString(widget.path),
-                                style: const TextStyle(
-                                  color: Colors.pinkAccent,
-                                  fontSize: 16.0,
-                                ),
-                              ),
-                  ),
-                ),
-              ),
-              if (!widget.isSearchScreen)
-                Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.search_rounded,
-                        color: Colors.grey,
+                  )
+                : widget.path == ''
+                    ? const Text(
+                        'Foto',
+                        style: TextStyle(
+                          fontFamily: 'Bellania',
+                          color: Colors.pinkAccent,
+                          fontSize: 18.0,
+                        ),
+                      )
+                    : Text(
+                        cleanupString(widget.path),
+                        style: const TextStyle(
+                          color: Colors.pinkAccent,
+                          fontSize: 16.0,
+                        ),
                       ),
-                      onPressed: () async {
-                        await showSearch<Map<String, String>>(
-                          context: context,
-                          query: null,
-                          delegate: PhotoSearchDelegate(
-                            parentBloc: _bloc,
-                          ),
-                        );
-                      },
-                    )),
-            ],
           ),
         ));
   }
@@ -387,16 +398,19 @@ class FolderCard extends StatefulWidget {
     super.key,
     required this.photo,
     required this.isSearchScreen,
+    required this.onTapFn,
   });
 
   final Photo photo;
   final bool isSearchScreen;
+  final Function() onTapFn;
   @override
   State<FolderCard> createState() => _FolderCardState();
 }
 
 class _FolderCardState extends State<FolderCard> {
   bool isHover = false;
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -405,18 +419,7 @@ class _FolderCardState extends State<FolderCard> {
             isHover = value;
           });
         },
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            GalleryScreen.routeName,
-            arguments: {
-              'path': widget.photo.path,
-              'isSearchScreen': widget.isSearchScreen,
-              'searchString': '',
-              'searchType': ''
-            },
-          );
-        },
+        onTap: widget.onTapFn,
         child: GridTile(
             footer: Container(
               decoration: BoxDecoration(
