@@ -61,108 +61,117 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      appBar: appBar(),
-      body: rootWidget(),
-      bottomNavigationBar: const SizedBox(height: 20),
-    );
-  }
-
-  Widget rootWidget() {
-    return StreamBuilder<ApiResponse<List<Photo>>>(
-      stream: _bloc.photosListStream,
-      builder: (context, snapshot) {
-        if (snapshot.data?.status == Status.loading) {
-          return Center(
-            child: showLoader(context),
-          );
-        } else if (snapshot.data?.status == Status.completed ||
-            snapshot.data?.status == Status.refreshing) {
-          return photosGridView();
-        } else if (snapshot.data?.status == Status.error) {
-          return Error(
-              errorMessage: snapshot.data?.message,
-              onRetryPressed: () => _bloc.getInitialPhotosList());
-        }
-        return const SizedBox.shrink();
+        body: RefreshIndicator(
+      edgeOffset: AppBar().preferredSize.height,
+      onRefresh: () async {
+        await Future.delayed(Duration(seconds: 1));
+        return _bloc.refreshPhotosList();
       },
-    );
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: <Widget>[
+          SliverAppBar(
+            pinned: false,
+            snap: true,
+            floating: true,
+            flexibleSpace: appBar(),
+          ),
+          StreamBuilder<ApiResponse<List<Photo>>>(
+            stream: _bloc.photosListStream,
+            builder: (context, snapshot) {
+              if (snapshot.data?.status == Status.loading) {
+                return SliverFillRemaining(
+                  child: Center(
+                    child: showLoader(context),
+                  ),
+                );
+              } else if (snapshot.data?.status == Status.completed ||
+                  snapshot.data?.status == Status.refreshing) {
+                return _bloc.photoList.isEmpty
+                    ? SliverFillRemaining(
+                        child: Center(
+                          child: Text(
+                            "No photos yet in this folder.",
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
+                          ),
+                        ),
+                      )
+                    : photosGridView();
+              } else if (snapshot.data?.status == Status.error) {
+                return SliverFillRemaining(
+                    child: Error(
+                        errorMessage: snapshot.data?.message,
+                        onRetryPressed: () => _bloc.getInitialPhotosList()));
+              } else
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+            },
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 20))
+        ],
+      ),
+    ));
   }
 
   Widget photosGridView() {
-    //debugLog('photoliust is ${_bloc.photoList}');
-    return _bloc.photoList.isEmpty
-        ? const Center(
-            child: Text(
-            "No photos yet in this folder.",
-            style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-          ))
-        : RefreshIndicator(
-            //  displacement: 40,
-            edgeOffset: 20,
-            onRefresh: () async {
-              return _bloc.refreshPhotosList();
-            },
-            child: GridView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              controller: _bloc.scrollController,
-              itemBuilder: (context, index) {
-                return _bloc.photoList[index].type == 'folder'
-                    ? FolderCard(
-                        photo: _bloc.photoList[index],
-                        isSearchScreen: widget.isSearchScreen)
-                    : _bloc.photoList[index].type == 'video'
-                        ? PhotoVideoCard(
-                            onTapFn: () {
-                              Navigator.pushNamed(
-                                context,
-                                VideoScreen.routeName,
-                                arguments: {
-                                  'title': _bloc.photoList[index].id,
-                                  'filePath': _bloc.photoList[index].downloadUrl
-                                },
-                              );
-                            },
-                            childWidget: GridTile(
-                              footer: Container(
-                                padding: const EdgeInsets.all(8),
-                                color: Colors.grey.withOpacity(.5),
-                                child: Center(
-                                  child: Text(
-                                    trimExtension(_bloc.photoList[index].id!),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              child: Stack(fit: StackFit.expand, children: [
-                                GalleryImageBox(photo: _bloc.photoList[index]),
-                                const Icon(Icons.play_circle_outline_sharp,
-                                    color: Colors.white, size: 40),
-                              ]),
-                            ))
-                        : PhotoVideoCard(
-                            onTapFn: () {
-                              Navigator.pushNamed(
-                                context,
-                                PhotoPreviewScreen.routeName,
-                                arguments: PhotoPreviewScreenArgs(
-                                  photoList: _bloc.photoList,
-                                  index: index,
-                                ),
-                              );
-                            },
-                            childWidget:
-                                GalleryImageBox(photo: _bloc.photoList[index]));
-              },
-              itemCount: _bloc.photoList.length,
-              gridDelegate: getGridDelegate(_bloc.photoList),
-              scrollDirection: Axis.vertical,
-            ),
-          );
+    return SliverGrid.builder(
+      itemCount: _bloc.photoList.length,
+      gridDelegate: getGridDelegate(_bloc.photoList),
+      itemBuilder: (context, index) {
+        return _bloc.photoList[index].type == 'folder'
+            ? FolderCard(
+                photo: _bloc.photoList[index],
+                isSearchScreen: widget.isSearchScreen)
+            : _bloc.photoList[index].type == 'video'
+                ? PhotoVideoCard(
+                    onTapFn: () {
+                      Navigator.pushNamed(
+                        context,
+                        VideoScreen.routeName,
+                        arguments: {
+                          'title': _bloc.photoList[index].id,
+                          'filePath': _bloc.photoList[index].downloadUrl
+                        },
+                      );
+                    },
+                    childWidget: GridTile(
+                      footer: Container(
+                        padding: const EdgeInsets.all(8),
+                        color: Colors.grey.withOpacity(.5),
+                        child: Center(
+                          child: Text(
+                            trimExtension(_bloc.photoList[index].id!),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      child: Stack(fit: StackFit.expand, children: [
+                        GalleryImageBox(photo: _bloc.photoList[index]),
+                        const Icon(Icons.play_circle_outline_sharp,
+                            color: Colors.white, size: 40),
+                      ]),
+                    ))
+                : PhotoVideoCard(
+                    onTapFn: () {
+                      Navigator.pushNamed(
+                        context,
+                        PhotoPreviewScreen.routeName,
+                        arguments: PhotoPreviewScreenArgs(
+                          photoList: _bloc.photoList,
+                          index: index,
+                        ),
+                      );
+                    },
+                    childWidget:
+                        GalleryImageBox(photo: _bloc.photoList[index]));
+      },
+    );
   }
 
   String trimExtension(String fileName) {
@@ -247,40 +256,40 @@ class _GalleryScreenState extends State<GalleryScreen> {
             }
           },
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (widget.path == '' && !widget.isSearchScreen)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  //  fit: FlexFit.tight,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.density_small_outlined),
-                        onPressed: () async {
-                          setState(() {
-                            galleryThumbnailSize =
-                                AppConstant.galleryThumbnailSizeUnZoomed;
-                            AppConstant.galleryThumbnailSize =
-                                galleryThumbnailSize;
-                          });
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.density_medium_outlined),
-                        onPressed: () async {
-                          setState(() {
-                            galleryThumbnailSize =
-                                AppConstant.galleryThumbnailSizeZoomed;
-                            AppConstant.galleryThumbnailSize =
-                                galleryThumbnailSize;
-                          });
-                        },
-                      ),
-                    ],
+              if (widget.path == '' && !widget.isSearchScreen) ...[
+                Visibility(
+                  visible: galleryThumbnailSize ==
+                      AppConstant.galleryThumbnailSizeZoomed,
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.density_small_outlined,
+                      size: 20,
+                    ),
+                    onPressed: () async {
+                      setState(() {
+                        galleryThumbnailSize =
+                            AppConstant.galleryThumbnailSizeUnZoomed;
+                        AppConstant.galleryThumbnailSize = galleryThumbnailSize;
+                      });
+                    },
                   ),
                 ),
+                Visibility(
+                  visible: galleryThumbnailSize ==
+                      AppConstant.galleryThumbnailSizeUnZoomed,
+                  child: IconButton(
+                    icon: const Icon(Icons.density_medium_outlined, size: 22),
+                    onPressed: () async {
+                      setState(() {
+                        galleryThumbnailSize =
+                            AppConstant.galleryThumbnailSizeZoomed;
+                        AppConstant.galleryThumbnailSize = galleryThumbnailSize;
+                      });
+                    },
+                  ),
+                )
+              ],
               Expanded(
                 child: Center(
                   child: GestureDetector(
@@ -290,7 +299,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
                     child: widget.isSearchScreen && widget.path == ''
                         ? Text(
                             widget.searchStr,
-                            textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16.0,
@@ -299,7 +307,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
                         : widget.path == ''
                             ? const Text(
                                 'Foto',
-                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Bellania',
                                   color: Colors.white,
@@ -308,7 +315,6 @@ class _GalleryScreenState extends State<GalleryScreen> {
                               )
                             : Text(
                                 cleanupString(widget.path),
-                                textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 16.0,
