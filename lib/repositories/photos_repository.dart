@@ -47,13 +47,14 @@ class PhotosRepository {
     try {
       String url;
       url = Endpoints.getAutocompleteUrl() + searchStr;
-      debugLog('******************* calling searchPhotos for $url');
+      debugLog('******************* calling autocompletePhotos for $url');
       Stopwatch stopwatch1 = Stopwatch()..start();
       response = await _helper.get(url);
-      debugLog('searchPhotos() rest call  executed in ${stopwatch1.elapsed}');
+      debugLog(
+          'autocompletePhotos() rest call  executed in ${stopwatch1.elapsed}');
       debugLog(jsonDecode(utf8.decoder.convert(response.body)).toString());
       debugLog(
-          'done calling with searchPhotos ${jsonDecode(utf8.decoder.convert(response.body))['result']}');
+          'done calling with autocompletePhotos ${jsonDecode(utf8.decoder.convert(response.body))['result']}');
       if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
         List<dynamic> rawResults =
             jsonDecode(utf8.decoder.convert(response.body))['result'];
@@ -81,6 +82,7 @@ class PhotosRepository {
       String photoType, String photoSearchStr) async {
     List<Photo> photos = [];
     PhotoResponse response;
+    PhotoResponse<List<Photo>> pResponse;
     Stopwatch stopwatch = Stopwatch()..start();
     try {
       String url;
@@ -89,11 +91,12 @@ class PhotosRepository {
       debugLog('******************* calling searchPhotos 2 for $url');
       Stopwatch stopwatch1 = Stopwatch()..start();
       response = await _helper.get(url);
-      debugLog('getPhotos() rest call  executed in ${stopwatch1.elapsed}');
+      debugLog('searchPhotos() rest call  executed in ${stopwatch1.elapsed}');
 
       if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
         Map<String, dynamic> jsonData =
             jsonDecode(utf8.decoder.convert(response.body))['result'];
+        debugLog("searchphotos json data " + jsonData.toString());
         if (jsonData["searchResult"]["searchQuery"]["type"] == 102) {
           //Directory
           String path = jsonData["searchResult"]["searchQuery"]["text"];
@@ -101,7 +104,7 @@ class PhotosRepository {
             path = jsonData["map"]["directories"][0]["path"] +
                 jsonData["map"]["directories"][0]['name'];
           }
-          return getPhotosList(path);
+          pResponse = await getPhotosList(path);
         } else {
           //Photo or Video
           photos = decodeSearchResponse(jsonData, url);
@@ -109,17 +112,23 @@ class PhotosRepository {
               .where((o) =>
                   o.type == 'image' || o.type == 'video' || o.type == 'folder')
               .toList();
+          pResponse =
+              PhotoResponse(photos, response.statusCode, response.headers);
         }
+      } else {
+        pResponse =
+            PhotoResponse(photos, response.statusCode, response.headers);
       }
     } on Exception catch (e, stack) {
       debugLog(e.toString());
       debugLog(stack.toString());
-
-      rethrow;
+      //When folder is empty, its throwing an exception. so just suppress it
+      //rethrow;
+      return PhotoResponse(photos, 0, {});
     }
     debugLog('searchPhotos() executed in ${stopwatch.elapsed}');
     debugLog('got searchPhotos $photos');
-    return PhotoResponse(photos, response.statusCode, response.headers);
+    return pResponse;
   }
 
   List<Photo> decodeResponse(Map<String, dynamic> jsonData, String url) {
