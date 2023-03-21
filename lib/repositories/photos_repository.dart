@@ -96,7 +96,7 @@ class PhotosRepository {
       if (jsonDecode(utf8.decoder.convert(response.body))['result'] != null) {
         Map<String, dynamic> jsonData =
             jsonDecode(utf8.decoder.convert(response.body))['result'];
-        debugLog("searchphotos json data " + jsonData.toString());
+        debugLog("searchphotos json data $jsonData");
         if (jsonData["searchResult"]["searchQuery"]["type"] == 102) {
           //Directory
           String path = jsonData["searchResult"]["searchQuery"]["text"];

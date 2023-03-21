@@ -33,13 +33,24 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Map hover = {};
   double screenWidth = 0;
   double galleryThumbnailSize = AppConstant.galleryThumbnailSize;
-
+  late ScrollController _scrollController;
+  bool _showBackToTopButton = false;
   @override
   void initState() {
     super.initState();
     _bloc = GalleryBloc(widget.path, widget.isSearchScreen, widget.searchStr,
         widget.searchType);
     _bloc.getInitialPhotosList();
+    _scrollController = ScrollController()
+      ..addListener(() {
+        setState(() {
+          if (_scrollController.offset >= 400) {
+            _showBackToTopButton = true; // show the back-to-top button
+          } else {
+            _showBackToTopButton = false; // hide the back-to-top button
+          }
+        });
+      });
   }
 
   @override
@@ -52,67 +63,81 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
+        floatingActionButton: _showBackToTopButton
+            ? FloatingActionButton(
+                onPressed: () {
+                  _scrollController.animateTo(0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.linear);
+                },
+                backgroundColor: const Color.fromRGBO(255, 64, 129, 0.3),
+                foregroundColor: Colors.pinkAccent,
+                child: const Icon(Icons.arrow_drop_up_outlined, size: 40),
+              )
+            : const SizedBox.shrink(),
         body: RefreshIndicator(
-      color: Colors.white,
-      backgroundColor: Colors.transparent,
-      edgeOffset: AppBar().preferredSize.height,
-      onRefresh: () async {
-        await Future.wait([
-          Future.delayed(const Duration(seconds: 1)),
-          _bloc.refreshPhotosList()
-        ]);
-        return;
-      },
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: <Widget>[
-          SliverAppBar(
-            iconTheme: const IconThemeData(
-              color: Colors.grey,
-            ),
-            pinned: false,
-            snap: true,
-            floating: true,
-            flexibleSpace: appBar(),
+          color: Colors.white,
+          backgroundColor: Colors.transparent,
+          edgeOffset: AppBar().preferredSize.height,
+          onRefresh: () async {
+            await Future.wait([
+              Future.delayed(const Duration(seconds: 1)),
+              _bloc.refreshPhotosList()
+            ]);
+            return;
+          },
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: <Widget>[
+              SliverAppBar(
+                iconTheme: const IconThemeData(
+                  color: Colors.grey,
+                ),
+                pinned: false,
+                snap: true,
+                floating: true,
+                flexibleSpace: appBar(),
+              ),
+              StreamBuilder<ApiResponse<List<Photo>>>(
+                stream: _bloc.photosListStream,
+                builder: (context, snapshot) {
+                  if (snapshot.data?.status == Status.loading) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: showLoader(context),
+                      ),
+                    );
+                  } else if (snapshot.data?.status == Status.completed ||
+                      snapshot.data?.status == Status.refreshing) {
+                    return _bloc.photoList.isEmpty
+                        ? const SliverFillRemaining(
+                            child: Center(
+                              child: Text(
+                                "No photos yet in this folder.",
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                            ),
+                          )
+                        : photosGridView();
+                  } else if (snapshot.data?.status == Status.error) {
+                    return SliverFillRemaining(
+                        child: Error(
+                            errorMessage: snapshot.data?.message,
+                            onRetryPressed: () =>
+                                _bloc.getInitialPhotosList()));
+                  } else {
+                    return const SliverToBoxAdapter(child: SizedBox.shrink());
+                  }
+                },
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 20))
+            ],
           ),
-          StreamBuilder<ApiResponse<List<Photo>>>(
-            stream: _bloc.photosListStream,
-            builder: (context, snapshot) {
-              if (snapshot.data?.status == Status.loading) {
-                return SliverFillRemaining(
-                  child: Center(
-                    child: showLoader(context),
-                  ),
-                );
-              } else if (snapshot.data?.status == Status.completed ||
-                  snapshot.data?.status == Status.refreshing) {
-                return _bloc.photoList.isEmpty
-                    ? const SliverFillRemaining(
-                        child: Center(
-                          child: Text(
-                            "No photos yet in this folder.",
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white),
-                          ),
-                        ),
-                      )
-                    : photosGridView();
-              } else if (snapshot.data?.status == Status.error) {
-                return SliverFillRemaining(
-                    child: Error(
-                        errorMessage: snapshot.data?.message,
-                        onRetryPressed: () => _bloc.getInitialPhotosList()));
-              } else {
-                return const SliverToBoxAdapter(child: SizedBox.shrink());
-              }
-            },
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20))
-        ],
-      ),
-    ));
+        ));
   }
 
   Widget photosGridView() {
