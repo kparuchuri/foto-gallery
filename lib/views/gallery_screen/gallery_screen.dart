@@ -35,6 +35,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
   double galleryThumbnailSize = AppConstant.galleryThumbnailSize;
   late ScrollController _scrollController;
   bool _showBackToTopButton = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,18 +64,33 @@ class _GalleryScreenState extends State<GalleryScreen> {
   Widget build(BuildContext context) {
     screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-        floatingActionButton: _showBackToTopButton
-            ? FloatingActionButton(
-                onPressed: () {
-                  _scrollController.animateTo(0,
-                      duration: const Duration(milliseconds: 500),
-                      curve: Curves.linear);
-                },
-                backgroundColor: const Color.fromRGBO(255, 64, 129, 0.3),
-                foregroundColor: Colors.pinkAccent,
-                child: const Icon(Icons.arrow_drop_up_outlined, size: 40),
-              )
-            : const SizedBox.shrink(),
+        floatingActionButton: AnimatedOpacity(
+            // If the widget is visible, animate to 0.0 (invisible).
+            // If the widget is hidden, animate to 1.0 (fully visible).
+            opacity: _showBackToTopButton ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 1000),
+            child: _showBackToTopButton
+                ? Container(
+                    decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.pinkAccent,
+                            width: 4,
+                            style: BorderStyle.solid)),
+                    margin: const EdgeInsets.fromLTRB(0, 0, 0, 25),
+                    width: 60,
+                    height: 60,
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        _scrollController.animateTo(0,
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.linear);
+                      },
+                      backgroundColor: const Color.fromRGBO(255, 64, 129, 0.3),
+                      foregroundColor: Colors.pinkAccent,
+                      child: const Icon(Icons.arrow_drop_up_outlined, size: 40),
+                    ))
+                : SizedBox.shrink()),
         body: RefreshIndicator(
           color: Colors.white,
           backgroundColor: Colors.transparent,
