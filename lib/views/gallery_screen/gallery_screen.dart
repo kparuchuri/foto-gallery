@@ -265,14 +265,21 @@ class _GalleryScreenState extends State<GalleryScreen> {
       QuiltedGridTile(1, 1),
       QuiltedGridTile(1, 1),
     ];
-
+    List<QuiltedGridTile> largeScreenZoomed = const [
+      QuiltedGridTile(2, 2),
+      QuiltedGridTile(1, 2),
+      QuiltedGridTile(2, 2),
+      QuiltedGridTile(1, 2),
+    ];
     bool isLargeScreen = screenWidth > 1200 ? true : false;
     bool isZoomed = AppConstant.galleryThumbnailSize ==
         AppConstant.galleryThumbnailSizeZoomed;
     return hasOnlyPhotos(_bloc.photoList)
         ? SliverQuiltedGridDelegate(
             crossAxisCount: isLargeScreen
-                ? 10
+                ? isZoomed
+                    ? 6
+                    : 10
                 : isZoomed
                     ? 4
                     : 6,
@@ -280,7 +287,9 @@ class _GalleryScreenState extends State<GalleryScreen> {
             crossAxisSpacing: 2,
             repeatPattern: QuiltedGridRepeatPattern.inverted,
             pattern: isLargeScreen
-                ? largeScreen
+                ? isZoomed
+                    ? largeScreenZoomed
+                    : largeScreen
                 : isZoomed
                     ? smallScreenZoomed
                     : smallScreen,
