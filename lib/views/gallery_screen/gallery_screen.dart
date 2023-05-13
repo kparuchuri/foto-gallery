@@ -90,7 +90,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                       foregroundColor: Colors.pinkAccent,
                       child: const Icon(Icons.arrow_drop_up_outlined, size: 40),
                     ))
-                : SizedBox.shrink()),
+                : const SizedBox.shrink()),
         body: RefreshIndicator(
           color: Colors.white,
           backgroundColor: Colors.transparent,

@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:dio/adapter_browser.dart';
+import 'package:dio/browser.dart';
 import 'package:dio/dio.dart';
 import 'package:foto_gallery/network/endpoints.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +18,7 @@ class ApiBaseHelper {
     String url = Endpoints.getLoginUrl();
     var dio = Dio();
     dio.interceptors.add(InterceptorsWrapper(onError: (error, handler) {
-      debugLog(error.message);
+      debugLog(error.message!);
       debugLog(error.stackTrace.toString());
       return handler.next(error);
     }, onRequest: (request, handler) {
@@ -77,7 +77,7 @@ NOT AUTHED {"error":{"code":1,"message":"Not authenticated","request":{"method":
       isLoggedIn = true;
     } on DioError catch (e) {
       debugLog(e.toString());
-      if (e.type == DioErrorType.connectTimeout) {
+      if (e.type == DioErrorType.connectionTimeout) {
         throw Exception(
             'Unable to connect to backend server. Please try again');
       }
