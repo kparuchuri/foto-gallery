@@ -143,9 +143,9 @@ class PhotosRepository {
         type: 'folder',
         path: directory['path'] + directory['name'],
         downloadUrl: directory['path'] + directory['name'],
-        url: directory['preview'] != null
-            ? '${Endpoints.getContentUrl() + '/' + directory['preview']['directory']['path'] + '/' + directory['preview']['directory']['name']}/' +
-                directory['preview']['name'] +
+        url: directory['cover'] != null
+            ? '${Endpoints.getContentUrl() + '/' + directory['cover']['directory']['path'] + '/' + directory['cover']['directory']['name']}/' +
+                directory['cover']['name'] +
                 Endpoints.thumbpathPostfix
             : directory['path'] + directory['name'],
       );
